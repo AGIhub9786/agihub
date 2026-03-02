@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGIHUB Chat</title>
+    <style>
+        /* 极简样式，和 w8nrind.ai 核心交互一致 */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .chat-box { background: white; border-radius: 8px; padding: 20px; height: 600px; overflow-y: auto; margin-bottom: 20px; }
+        .message { margin: 10px 0; padding: 10px 15px; border-radius: 6px; max-width: 80%; }
+        .user-message { background: #0070f3; color: white; margin-left: auto; }
+        .ai-message { background: #e5e5e5; color: #333; margin-right: auto; }
+        .input-area { display: flex; gap: 10px; }
+        #message-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        #send-btn { padding: 12px 24px; background: #0070f3; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        #send-btn:hover { background: #0051b8; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 20px;">AGIHUB Chat</h1>
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-area">
+            <input type="text" id="message-input" placeholder="输入你的问题，按回车或点击发送...">
+            <button id="send-btn">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // 核心交互逻辑：发送消息 → 调用后端 API → 显示回复
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        // 发送消息函数
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // 显示用户消息
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            try {
+                // 调用 Vercel 后端 API（后续步骤会创建这个 API）
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                // 显示 AI 回复
+                addMessage(data.reply, 'ai');
+            } catch (error) {
+                addMessage('出错了：' + error.message, 'ai');
+            }
+        }
+
+        // 添加消息到聊天框
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.textContent = text;
+            chatBox.appendChild(messageDiv);
+            // 滚动到底部
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // 绑定事件
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
